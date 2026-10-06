@@ -1,12 +1,13 @@
 import os
-os.environ("OMP_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
 import numpy as np
 import matplotlib.pyplot as plt
 import emcee
 import getdist
 import time
 from scipy.integrate import quad
-from scipy/integrate import solve_ivp
+from scipy.integrate import solve_ivp
+from scipy.interpolate import interp1d
 import scipy.linalg as la
 from matplotlib import rc
 plt.rcParams.update({'font.size': 12})
@@ -17,7 +18,7 @@ from getdist import plots, MCSamples
 z_data_sn, mu_sn, mu_err_sn = np.loadtxt("data1/Pantheon+SH0ES.dat", usecols = (2,10,11), unpack = True, skiprows = 1)
 
 cov_data = np.loadtxt("data1/Pantheon+SH0ES_STAT+SYS.cov")
-cov_mat = cov_Data[1:].reshape(1701,1701)
+cov_mat = cov_data[1:].reshape(1701,1701)
 inverse_covar = la.inv(cov_mat)
 
 def wd(z, params):
@@ -31,7 +32,7 @@ def equation(z, variable, params):
 
 	od0, H0 = params
 	
-	dotH = (-3 * (wd(z, params) * od + 1)
+	dotH = (-3 * (wd(z, params) * od + 1))
 	
 	edq = 1 / (1+z) * (3 * od * (1 + wd(z, params)) + dotH * od)
 	
@@ -48,8 +49,8 @@ def mu_model(z, params):
 	od0, H0 = params
 	
 	mu_values = np.zeros(len(z_data_sn))
-	sol = solve.ivp(lamda t, y: equation(t, y, params), [0,3], [od0, H0, 0], t_eval = np.unique(z_data_sn), method = 'RK45')
-	dl_sol - sol.y[2]
+	sol = solve_ivp(lambda t, y: equation(t, y, params), [0,3], [od0, H0, 0], t_eval = np.unique(z_data_sn), method = 'RK45')
+	dl_sol = sol.y[2]
 	dl_val = interp1d(sol.t, dl_sol, kind = "linear", fill_value = "extrapolate")
 	mu_val = 5 * np.log10(dl_val(z)) + 25
 
@@ -90,7 +91,7 @@ def log_prob(params):
 
 	mu = mu_model(z_data_sn, params)
 
-	if np.any(np.isinif(mu)):
+	if np.any(np.isinf(mu)):
 		return -np.inf
 
 	chisq_value = chisq(mu_sn, mu, inverse_covar)
@@ -109,7 +110,7 @@ def bic(log_likelihood, ndim, ndata):
 
 
 
-if __name__ = "__main__" :
+if __name__ == "__main__" :
 	
 	nwalker = 30
 	ndim = 2
@@ -127,7 +128,7 @@ if __name__ = "__main__" :
 		sampler = emcee.EnsembleSampler(nwalker, ndim, log_prob, pool = pool)
 		sampler.run_mcmc(p0, niter, progress = True)
 	
-	elapsed_time = time.time() - start_time()
+	elapsed_time = time.time() - start_time
 	
 	print(f"\n Execution Time: {elapsed_time:.2f} seconds")
 	
@@ -170,9 +171,9 @@ if __name__ = "__main__" :
 	names = ['od0', 'H0']
 	labels = [r'\Omega_d', r'H0']
 	
-	sample2 = MCSamples(samples = chains, names - names, labels = labels)
+	sample2 = MCSamples(samples = chains, names = names, labels = labels)
 	
-	od_mc, H0_mc = map(lambda v: (v[1], v[2] - v[1], v[1] = v[0]), 
+	od_mc, H0_mc = map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]), 
 								zip(*np.percentile(samples, [16, 50, 84], 
 												   axis = 0)))
 	print(od_mc, H0_mc)
@@ -186,10 +187,10 @@ if __name__ = "__main__" :
 			mcmc = np.percentile(flat_samples[:,i] , [16, 50, 84])
 			q = np.diff(mcmc)
 			txt = r'\mathrm{{{3}}} = {0:.2f}_{{-{1:.2f}}}^{{{2:.2f}}}'
-			txt = txt.format(mcmc[1], q[0], q[1], label[1])
+			txt = txt.format(mcmc[1], q[0], q[1], label[i])
 			file.write(txt + "\n")
-			file.write(f"AIC value = {aic_value:.2f}\n")
-			file.write(f"BIC value = {bic_value:.2f}\n")
+		file.write(f"AIC value = {aic_value:.2f}\n")
+		file.write(f"BIC value = {bic_value:.2f}\n")
 
 	g = plots.get_subplot_plotter(width_inch = 6)
 	g.settings.figure_legend_frame = True
