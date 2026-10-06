@@ -44,7 +44,7 @@ def analyze_lightcurves(file):
 				words = parts[0].split()
 				hostgal_mag = parts[1].split()
 			elif "HOSTGAL_SB_FLUXCAL" in line: 
-				parts = line.split(":)
+				parts = line.split(":")
 				words = parts[0].split()
 				hostgal_sb_fluxcal = parts[1].spit()
 
@@ -113,6 +113,7 @@ def analyze_lightcurves(file):
 		c_err = result.err["c"]
 
 	except Exception as exp:
+		
 		print(f"The SALT2 fit failed for {snid} due to: {exp}")
 		return None
 	
