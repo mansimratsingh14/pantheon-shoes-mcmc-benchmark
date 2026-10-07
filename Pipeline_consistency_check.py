@@ -95,22 +95,23 @@ def analyze_lightcurves(file):
 	lc = Table.from_pandas(lc)
 
 	try:
-		results, fitted_model = sn.fit_lc(lc,
+		result, fitted_model = sn.fit_lc(lc,
 										model, 
-										["t0", "x1", "c"])
+										["t0", "x0", "x1", "c"])
 
-		t0 = results.parameters[results.param_names.index("t0")]
-		x1 = results.parameters[results.param_names.index("x1")]
-		c = results.parameters[results.param_names.index("c")]
+		t0 = result.parameters[result.param_names.index("t0")]
+		x0 = result.parameters[result.param_names.index("x0")]
+		x1 = result.parameters[result.param_names.index("x1")]
+		c = result.parameters[result.param_names.index("c")]
 
 		stretch_factor = 0.98 + 0.091 * x1 + 0.003 * x1**2 - 0.00075 * x1**3
 
 		dm15 = 1.09 - 0.161 * x1 + 0.0013 * x1**2 - 0.000130 * x1**3
 
 		df["PHASE"] = df["MJD"] - t0
-		t0_err = results.errors["t0"]
-		x1_err = results.errors["x1"]
-		c_err = results.errors["c"]
+		t0_err = result.errors["t0"]
+		x1_err = result.errors["x1"]
+		c_err = result.errors["c"]
 
 	except Exception as exp:
 		
@@ -133,7 +134,7 @@ def analyze_lightcurves(file):
 				"t0_err": t0_err,
 				"c": c,
 				"c_err": c_err,
-				"Fit success": results.success,
+				"Fit success": result.success,
 				"MJD MIN": mjd_min, 
 				"MJD MAX": mjd_max
 			}
@@ -151,12 +152,13 @@ for file in files:
 			continue
 		
 		results.append(result)
+	
 	except pd.errors.EmptyDataError:
 		print(f"Skipped empty files : {file}")
 
 results_df = pd.DataFrame(results)
 
-filter_cuts = ((-3.0 < results_df["x1"]) & (results_df["x1"] <= +3.0) & 
+filter_cuts = ((-3.0 < results_df["x1"]) & (results_df["x1"] < +3.0) & 
 				(-0.3 < results_df["c"]) & (results_df["c"] < +0.3) & 
 				(results_df["x1_err"] <= 1.0) & 
 				(results_df["c_err"] < 0.1) & 
