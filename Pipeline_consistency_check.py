@@ -80,22 +80,22 @@ def analyze_lightcurves(file):
 
 	df["BAND"] = df["BAND"].map(band_map)
 
-	lc = df[["MJD", "BAND", "FLUXCAL", "FLUXCALERR"]].copy()
+	ptable = df[["MJD", "BAND", "FLUXCAL", "FLUXCALERR"]].copy()
 
-	lc = lc.rename(columns = {"MJD" : "time", 
+	ptable = ptable.rename(columns = {"MJD" : "time", 
 								"BAND": "band",
 								"FLUXCAL": "flux",
 								"FLUXCALERR":"fluxerr"})
 
 
-	lc["zp"] = 27.5
-	lc["zpsys"] = "ab" 
+	ptable["zp"] = 27.5
+	ptable["zpsys"] = "ab" 
 
 	model.set(z = redshift_cmb)
-	lc = Table.from_pandas(lc)
+	ptable = Table.from_pandas(ptable)
 
 	try:
-		result, fitted_model = sn.fit_lc(lc,
+		result, fitted_model = sn.fit_lc(ptable,
 										model, 
 										["t0", "x0", "x1", "c"])
 
